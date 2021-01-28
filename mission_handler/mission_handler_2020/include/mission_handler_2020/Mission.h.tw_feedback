@@ -1,0 +1,270 @@
+#pragma once
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Polygon.h>
+#include <std_msgs/Bool.h>
+#include <ros/ros.h>
+#include <std_msgs/Float64.h>
+
+struct Vehicle2Mission{
+    geometry_msgs::PoseStamped curpos;
+    int32_t traffic_light;
+    constexpr static int32_t RED_3 = 1;
+    constexpr static int32_t YELLOW_3 = 2;
+    constexpr static int32_t GREEN_3 = 3;
+    constexpr static int32_t RED_4 = 4;
+    constexpr static int32_t YELLOW_4 = 5;
+    constexpr static int32_t GREEN_4 = 6;
+    constexpr static int32_t LEFT_RED_4 = 7;
+    constexpr static int32_t RED_YELLOW_4 = 8;
+};
+struct Mission2Vehicle{
+    bool isMissionDone;
+    bool isAvoidMission;
+    bool isParkingMission;
+};
+
+class Mission{
+public:
+    Mission(ros::NodeHandle& nh, int mission_no) : mission_identifier(mission_no) {} //interface for constructor
+    virtual Mission2Vehicle processMission(const Vehicle2Mission& v2m) = 0;
+    virtual std::string to_string() = 0;
+    virtual int getMissionIdentifier() const {return mission_identifier;}
+private:
+    int mission_identifier;
+
+};
+
+class MissionNone : public Mission{
+public:
+    MissionNone(ros::NodeHandle& nh, int mission_no) : Mission(nh, mission_no) {}
+    Mission2Vehicle processMission(const Vehicle2Mission& v2m) {
+        Mission2Vehicle m;
+        m.isMissionDone = false; //never done
+        return m;
+    }
+    std::string to_string() {return "MissionNone";}
+};
+
+class MissionParking : public Mission{
+public:
+    MissionParking(
+        ros::NodeHandle& nh, 
+        int mission_no,
+        double seeking_max_velocity,
+        double parking_time,
+        std::vector<geometry_msgs::PoseStamped> goal_pose_vec, 
+        std::vector<geometry_msgs::PoseStamped> recovery_pose_vec,
+        std::vector<geometry_msgs::Polygon> goal_area_poly) : 
+            Mission(nh, mission_no), seeking_velocity(seeking_velocity), parking_time(parking_time),
+            goal_pose_vec(goal_pose_vec), recovery_pose_vec(recovery_pose_vec), goal_area_poly(goal_area_poly) 
+            {
+                max_vel_pub = nh.advertise<std_msgs::Float64>("op_planner_max_velocity", 10);
+                estop_pub = nh.advertise<std_msgs::Bool>("erp42_estop", 10);
+                goal_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("goal_navigation", 10);
+                state = STATE::SEEKING;
+            }
+    Mission2Vehicle processMission(const Vehicle2Mission& v2m){
+        Mission2Vehicle m;
+
+        double dt;
+        std_msgs::Float64 max_vel;
+        std_msgs::Bool estop;
+
+        switch(state){
+        case STATE::SEEKING_START://find area to park with low speed
+            max_vel.data = seeking_velocity;
+            max_vel_pub.publish(max_vel);
+            state = STATE::SEEKING;
+            break;
+        
+        case STATE::SEEKING: 
+            //seeking logic....
+            target_goal_idx = 1;
+            //seeking logic done...
+
+            //publish goal to navigation stack...
+            //publish goal to navigation stack done
+            state = STATE::PARKING;
+            m.isParkingMission = true;
+
+            break;
+        case STATE::PARKING:
+            //wait for navigation stack's completion notifying
+            //wait for navigation stack's completion notifying end...
+
+            estop.data = true;
+            estop_pub.publish(estop);
+            parking_start_time = ros::Time::now();
+            state = STATE::WAITING;
+            break;
+
+        case STATE::WAITING:
+            dt = (ros::Time::now() - parking_start_time).toSec();
+            if (dt > parking_time) {
+                estop.data = false;
+                estop_pub.publish(estop);
+                state = STATE::RECOVERING;
+
+                //send recovery goal
+            }
+            break;
+        case STATE::RECOVERING:
+            //wait for navigation stack's completion notifying
+            //wait for navigation stack's completion notifying end...
+            m.isParkingMission = false;
+            m.isMissionDone = true; //never done
+            break;
+        }
+        return m;
+    }
+    std::string to_string() {return "MissionParking";}
+private:
+    ros::Publisher goal_pose_pub;
+    ros::Publisher estop_pub;
+    ros::Publisher max_vel_pub; 
+    
+
+    std::vector<geometry_msgs::PoseStamped> goal_pose_vec, recovery_pose_vec;
+    std::vector<geometry_msgs::Polygon> goal_area_poly;
+    double seeking_velocity, parking_time;
+    enum class STATE {SEEKING_START, SEEKING, PARKING, WAITING, RECOVERING};
+    STATE state;
+    int target_goal_idx;
+    ros::Time parking_start_time;
+};
+
+class MissionTrafficLight: public Mission{
+public:
+    MissionTrafficLight(ros::NodeHandle& nh, int mission_no, 
+        double a, double b, double c, double critical_distance) : 
+            Mission(nh, mission_no) ,a(a), b(b), c(c), critical_distance(critical_distance), isDone(false) {
+                estop_pub = nh.advertise<std_msgs::Bool>("erp42_estop", 10);
+            }
+    Mission2Vehicle processMission(const Vehicle2Mission& v2m){
+         
+        if (false == isDone){
+            double x = v2m.curpos.pose.position.x;
+            double y = v2m.curpos.pose.position.y;
+
+            double dist_to_stopline = std::fabs(a*x + b*y + c) / std::sqrt(a*a + b*b);
+            ROS_WARN("dist to stopline : %lf", dist_to_stopline);
+            
+			if (dist_to_stopline < critical_distance){
+			    
+				//ROS_INFO("traffic_light = %d",v2m.traffic_light);
+
+                if (v2m.traffic_light >= 1 && v2m.traffic_light  < 4) { //3구
+                //1, 2, 3일때 3구라는 가정이 들어가있는 코드인데, 숫자로 직접 적어버리게 되면 그 의미를 몰라 나중에 유지보수가 힘들어짐
+                //어떤식으로는 상수화 하는게 좋음 : constexpr static int GREEN_3 = 3; 이런식
+                    if (v2m.traffic_light == Vehicle2Mission::GREEN_3) 
+                    //tw : traffic_light 변수를 if문 두개를 넣어서 검사하고 있음 -> 이 경우 Switch로 작성하는게 더 깔끔함
+
+                    {
+                        
+                        ROS_WARN("Green Light 3 -> GO");
+                        //estop을 사용하는 코드가 여기서부터 매우 중복되고 있음 -> 람다함수나 코드구조 변경을 통해 중복을 피해야함
+                        //패턴이 ROS_WARN -> estop 신호 publish ->(optional) isDone 체크 이므로 쉽게 함수화 가능
+						std_msgs::Bool b;
+                        b.data = false;
+                        estop_pub.publish(b);
+
+                        isDone = true; //critical_distance내에서 신호등이 바뀌면? 
+                    }
+                    else {
+                        ROS_WARN("Traffic 3 ESTOP");
+
+						std_msgs::Bool b;
+                        b.data = true;
+                        estop_pub.publish(b);
+                    }    
+                }
+                else { //4구
+                    //int mission_num = getMissionIdentifier();  
+                    if(getMissionIdentifier() == 3){//좌회전 신호등 
+                    //tw : identifier 확인하는건 좌/직진 신호를 구분하기 위한 하드코딩??
+                    //관리할 신호등에 대한 고유한 변수는 parameter로 관리되고 있지만(정지선의 직선의 방정식)
+                    //위 처럼 코드로 검사를 하게 되면 재사용성이 떨어짐(Mission.h가 kcity랑 호환되지 않음)
+                    //한가지 방법은 정지선의 방정식처럼 parameter를 이용해 직진/좌회전 신호 중 관심신호등을 미리 정의하게 하고
+                    //traffic light handler 생성자에 인자를 추가해 관심신호등 색깔을 미리 정의하는 방법이 있음
+                        if (v2m.traffic_light == Vehicle2Mission::LEFT_RED_4) {
+                            ROS_WARN("Left Light 4 -> Left GO");
+
+							std_msgs::Bool b;
+                            b.data = false;
+                            estop_pub.publish(b);
+
+                            isDone = true; 
+                            
+                        }
+                        else {
+                            ROS_WARN("Traffic 4 -> ESTOP");
+
+							std_msgs::Bool b;
+                            b.data = true;
+                            estop_pub.publish(b);
+                        }    
+                    }
+                    
+					else{//직진
+						ROS_WARN("WHATTTTTTT!!");//no straight trafic sign in soongsil test  
+                        if (v2m.traffic_light == Vehicle2Mission::GREEN_4) {
+                            std_msgs::Bool b;
+                            b.data = false;
+                            estop_pub.publish(b);
+
+                            isDone = true;
+                        }                   
+                        else {
+                            std_msgs::Bool b;
+                            b.data = true;
+                            estop_pub.publish(b);
+                        }    
+                    }
+					
+                }
+            }
+            else {} // do nothing when vehicle is far from stopline
+             
+            /*
+            if (dist_to_stopline < critical_distance){
+                if (v2m.traffic_light == Vehicle2Mission::TRAFFIC_GREEN) {
+                    std_msgs::Bool b;
+                    b.data = false;
+                    estop_pub.publish(b);
+
+                    isDone = true;
+                }
+                else {
+                    std_msgs::Bool b;
+                    b.data = true;
+                    estop_pub.publish(b);
+                }
+            }
+            else {} // do nothing when vehicle is far from stopline
+            */
+        }
+
+       Mission2Vehicle m;
+        m.isMissionDone = isDone; 
+        return m;
+    }
+    std::string to_string() {return "MissionTrafficLight";}
+    double a, b, c; //stopline distance calculation members
+    double critical_distance;
+    bool isDone;
+    ros::Publisher estop_pub;
+};
+
+class MissionObstacleAvoidance: public Mission{
+public:
+    MissionObstacleAvoidance(ros::NodeHandle& nh, int mission_no) : Mission(nh, mission_no) {
+
+    }
+    Mission2Vehicle processMission(const Vehicle2Mission& v2m){
+        Mission2Vehicle m;
+        m.isMissionDone = false; //never done
+        m.isAvoidMission = true;
+        return m;
+    }
+    std::string to_string() {return "MissionObstacleAvoidance";}
+};

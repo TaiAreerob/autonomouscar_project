@@ -1,0 +1,21 @@
+1. install source from https://launchpad.net/ubuntu/+source/geographiclib
+2. tar xfpz GeographicLib-1.50.1.tar.gz 
+3. cd GeographicLib-1.50.1
+4. mkdir build
+5. cd build
+6. cmake ..
+7. make
+8. sudo make install
+
+빌드 에러시 cmake 업그레이드
+1. install cmake-3.17.2.tar.gz from https://cmake.org/download/ 
+2. tar -xvzf cmake-3.17.2.tar.gz
+3. cd cmake-3.17.2
+4. ./bootstrap -prefix=/usr/local
+5. make
+6. make install
+7. vi ~/.bash_profile
+8. PATH=/usr/local/bin:$PATH:$HOME/bin (add this line in .bashrc file)
+9. cmake --version (check the version)
+
+

@@ -1,0 +1,84 @@
+<launch>
+
+ <!-- <arg name="path_pcd" default='"/home/autoware/shared_dir/map/parkinglot/parkinglot1.pcd"' /> -->
+
+<!-- ==================================== sensor & erp42 driver ======================================= -->
+  <!-- imu_driver -->
+   <node pkg="imu_vn100_yu" type="imu_driver_node" name="vn100_imu">
+    <param name="port" value="/dev/vn100_imu"/>
+    <param name="baudrate" value="115200"/>
+  </node>
+
+
+
+  <!-- velodyne 16 -->
+  <arg name="pcap" default="" />
+  <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
+  <arg name="min_range" default="0.4" />
+  <arg name="max_range" default="130.0" />
+  <arg name="model" default="VLP16"/>
+  <arg name="topic_name" default="points_raw"/>
+
+  <!-- start nodelet manager and driver nodelets -->
+  <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
+    <arg name="model" value="$(arg model)"/>
+    <arg name="pcap" value="$(arg pcap)"/>
+  </include>
+
+  <!-- start cloud nodelet -->
+  <node pkg="nodelet" type="nodelet" name="cloud_nodelet"
+        args="load velodyne_pointcloud/CloudNodelet velodyne_nodelet_manager">
+    <param name="calibration" value="$(arg calibration)"/>
+    <param name="min_range" value="$(arg min_range)"/>
+    <param name="max_range" value="$(arg max_range)"/>
+    <remap from="velodyne_points" to="$(arg topic_name)"/>
+  </node>
+
+  <!-- erp42 driver -->
+  <node pkg="erp42_driver" type="erp42_main" name="erp42_main">
+    <param name="port" value="/dev/erp42"/>
+    <param name="frequency" value="20"/>
+    <param name="wheelbase" value="1.12"/>
+    <param name="maximum_steering_angle" value="2000"/>
+    <param name="minimum_turning_radius" value="2.6"/>
+    <param name="initWriteThread" value="true"/>
+    <param name="settling_time" value="1.7"/>
+    <param name="weight" value="1.1"/>
+    <param name="shift" value="20.0"/>
+    <param name="steer_kp" value="1.0"/>
+    <param name="steer_ki" value="0.0"/>
+    <param name="steer_kd" value="0.0"/>
+    <param name="brake_max" value="100"/>
+    <param name="brake_kp" value="30"/>
+    <param name="brake_ki" value="0.0"/>
+    <param name="brake_kd" value="0.0"/>
+    <param name="accel_kp" value="20.0"/>
+    <param name="accel_ki" value="0.5"/>
+    <param name="accel_kd" value="0.0"/>
+    
+    <param name="C0" value="0.108"/>
+    <param name="C1" value="0.0184"/>
+  </node>
+
+  <!-- <rosparam command="load" file="$(find ndt_launch)/cfg/set_up.yaml" /> -->
+
+<!-- ================================== ndt matching launch ========================================== -->
+<!-- tf -->
+  <node pkg="tf"  type="static_transform_publisher" name="world_to_map" args="0 0 0 0 0 0 /world /map 10" />
+  <node pkg="tf"  type="static_transform_publisher" name="map_to_mobility" args="0 0 0 0 0 0 /map /mobility 10" />
+
+<!-- setup_tf.launch -->
+ <arg name="x" default="0.31"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.75"/>
+  <arg name="yaw" default="0.0"/>
+  <arg name="pitch" default="0.0"/>
+  <arg name="roll" default="0.0"/>
+  <arg name="frame_id" default="base_link"/>
+  <arg name="child_frame_id" default="velodyne"/>
+  <arg name="period_in_ms" default="10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer" args="$(arg x) $(arg y) $(arg z) $(arg yaw) $(arg pitch) $(arg roll) $(arg frame_id) $(arg child_frame_id) $(arg period_in_ms)"/>
+
+
+</launch>  

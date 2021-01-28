@@ -1,0 +1,478 @@
+<launch>
+
+
+  
+<node pkg="map_file" type="vector_map_loader" name="vector_map_loader" output="screen">
+    <param name="load_mode" value="directory" />
+    <param name="map_dir" value="$(env HOME)/shared_dir/map/soongsil_new/vector_map_tw" /> 
+     <!--<param name="map_dir" value="$(env HOME)/shared_dir/map/parkinglot/vector_curb" />  -->
+     <!--<param name="map_dir" value="$(env HOME)/shared_dir/map/parkinglot/0907_parkinglot2" />  -->
+    <!--<param name="map_dir" value="$(env HOME)/shared_dir/map/parkinglot/parkiglot_smoothing" />-->
+     <!--<param name="map_dir" value="$(env HOME)/shared_dir/map/lightpark/curb_vectormap_long" /> -->
+    <!--<param name="map_dir" value="$(env HOME)/shared_dir/map/kcity/vector_map/0903_KCITY_CURB" /> -->
+    <!--<param name="map_dir" value="$(env HOME)/shared_dir/map/kcity/vector_map/0918_tw" />-->
+
+    <param name="host_name" value="133.6.148.90" />
+    <param name="port" value="80" />
+    <param name="user" value="" />
+    <param name="password" value="" />
+  </node>
+
+  
+  <!-- max velocity -->
+  <arg name="maxVelocity"         default="2.0"/>
+
+
+  <arg name="pathDensity"           default="0.25" /> <!-- distance between each two waypoints 0.25-->
+  <arg name="enableSmoothing"         default="true" /> <!-- 1 or 0 -->
+  <arg name="enableLaneChange"         default="false" /> <!-- 1 or 0 -->
+  <arg name="enableRvizInput"         default="1" /> <!-- 1 or 0 -->
+  <arg name="enableReplan"            default="false" /> <!-- 1 or 0 -->
+  <arg name="velocitySource"          default="1" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info) "" -->
+  <arg name="mapSource"             default="0" /> <!-- Autoware=0, Vector Map Folder=1, kml file=2 -->
+  <arg name="mapFileName"           default="" /> <!-- incase of kml map source -->
+  <arg name="enableDynamicMapUpdate"       default="false" />
+
+<!-- =====================================global_planner=================================== -->
+<node pkg="op_global_planner" type="op_global_planner" name="op_global_planner" output="screen">
+
+    <param name="pathDensity"         value="$(arg pathDensity)" />
+    <param name="enableSmoothing"       value="$(arg enableSmoothing)" />
+    <param name="enableLaneChange"       value="$(arg enableLaneChange)" />
+    <param name="enableRvizInput"       value="$(arg enableRvizInput)" />
+    <param name="enableReplan"         value="$(arg enableReplan)" />
+    <param name="velocitySource"       value="$(arg velocitySource)" />
+    <param name="mapSource"         value="$(arg mapSource)" />
+    <param name="mapFileName"         value="$(arg mapFileName)" />
+
+    <param name="enableDynamicMapUpdate"   value="$(arg enableDynamicMapUpdate)" />
+
+  </node>
+
+<!-- =====================================local_planner=================================== -->
+<!-- Behavior selector specific parameters -->
+
+  <arg name="evidence_tust_number"   default="25"/>
+
+  <node pkg="op_local_planner" type="op_behavior_selector" name="op_behavior_selector" output="screen">
+
+  <param name="evidence_tust_number"   value="$(arg evidence_tust_number)"/>
+
+  </node>
+  <!-- op_motion_predictor.launch -->
+  <arg name="max_distance_to_lane"   default="1.0"/>
+  <arg name="prediction_distance"   default="0.01"/>
+  <arg name="enableGenrateBranches"   default="false"/>
+  <arg name="enableCurbObstacles"   default="true" />
+  <arg name="distanceBetweenCurbs"   default="0.01" />
+  <arg name="visualizationTime"     default="0.10" />
+  <arg name="enableStepByStepSignal"   default="false" />
+  <arg name="enableParticleFilterPrediction"   default="false" />
+
+
+  <node pkg="op_local_planner" type="op_motion_predictor" name="op_motion_predictor" output="screen"> 
+
+    <param name="max_distance_to_lane"     value="$(arg max_distance_to_lane)"/>
+    <param name="prediction_distance"     value="$(arg prediction_distance)"/>
+    <param name="enableGenrateBranches"   value="$(arg enableGenrateBranches)"/>
+    <param name="enableCurbObstacles"     value="$(arg enableCurbObstacles)" />
+    <param name="distanceBetweenCurbs"     value="$(arg distanceBetweenCurbs)" />
+    <param name="visualizationTime"     value="$(arg visualizationTime)" />
+    <param name="enableStepByStepSignal"   value="$(arg enableStepByStepSignal)" />
+    <param name="enableParticleFilterPrediction"   value="$(arg enableParticleFilterPrediction)" />
+
+  </node>
+true
+  <!-- Trajectory Generation Specific Parameters -->
+  <arg name="samplingTipMargin"     default="1.5"/>
+  <arg name="samplingOutMargin"     default="4.0" />
+  <arg name="samplingSpeedFactor"   default="0.25" />
+  <arg name="enableHeadingSmoothing"   default="false" />
+
+  <node pkg="op_local_planner" type="op_trajectory_generator" name="op_trajectory_generator" output="screen">
+
+  <param name="samplingTipMargin"     value="$(arg samplingTipMargin)"  />
+  <param name="samplingOutMargin"     value="$(arg samplingOutMargin)" />
+  <param name="samplingSpeedFactor"     value="$(arg samplingSpeedFactor)" />
+  <param name="enableHeadingSmoothing"   value="$(arg enableHeadingSmoothing)" />
+
+  </node>
+
+ <!-- <arg name="mapSource"         default="0" />  --><!-- Autoware=0, Vector Map Folder=1, kml=2 -->
+  <!--<arg name="mapFileName"       default="" />-->
+
+  <arg name="localPathDensity"       default="0.5" />
+  <arg name="rollOutDensity"       default="2.4" />
+  <arg name="rollOutsNumber"       default="2"    />
+
+  <arg name="minVelocity"         default="0.1" />
+  <arg name="maxLocalPlanDistance"     default="30" />
+  <arg name="horizonDistance"       default="30"  />
+
+  <arg name="minFollowingDistance"     default="10.0"  /> <!-- should be bigger than Distance to follow -->
+  <arg name="minDistanceToAvoid"     default="10.0" /> <!-- should be smaller than minFollowingDistance and larger than maxDistanceToAvoid -->
+  <arg name="maxDistanceToAvoid"     default="0.3"  /> <!-- should be smaller than minDistanceToAvoid -->
+  <arg name="speedProfileFactor"    default="2.0"  />
+
+  <arg name="smoothingDataWeight"      default="0.45"  />
+  <arg name="smoothingSmoothWeight"    default="0.40"  />
+
+  <arg name="horizontalSafetyDistance"  default="0.3"  />
+  <arg name="verticalSafetyDistance"  default="0.3"  />
+
+  <arg name="enableSwerving"       default="true"  />
+  <arg name="enableFollowing"       default="false" />
+  <arg name="enableTrafficLightBehavior" default="false" />
+  <arg name="enableStopSignBehavior"   default="false" />
+  <!--<arg name="enableLaneChange"       default="false" /> -->
+
+  <arg name="width"           default="0.79"  />
+  <arg name="length"           default="1.35"  />
+  <arg name="wheelBaseLength"       default="1.12"  />
+  <arg name="turningRadius"        default="2.6"  />
+  <arg name="maxSteerAngle"       default="0.5" />
+
+  <arg name="steeringDelay"       default="0.3" />
+  <arg name="minPursuiteDistance"   default="3.0"  />
+  <arg name="additionalBrakingDistance" default="1.0"  />
+
+  <arg name="giveUpDistance"       default="-0.5"  />
+
+  <arg name="maxAcceleration"       default="0.8" />
+  <arg name="maxDeceleration"       default="-3.0" />
+
+  <arg name="localVelocitySource"      default="1" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info) "" -->
+  <node pkg="op_local_planner" type="op_common_params" name="op_common_params" output="screen">
+
+  <!-- Common Parameters -->
+
+  <param name="mapSource"         value="$(arg mapSource)" /> <!-- Autoware=0, Vector Map Folder=1, kml=2 -->
+  <param name="mapFileName"         value="$(arg mapFileName)" />
+
+  <param name="pathDensity"           value="$(arg localPathDensity)" />
+  <param name="rollOutDensity"       value="$(arg rollOutDensity)" />
+  <param name="rollOutsNumber"       value="$(arg rollOutsNumber)"    />
+
+  <param name="maxVelocity"         value="$(arg maxVelocity)" />
+  <param name="minVelocity"         value="$(arg minVelocity)" />
+  <param name="maxLocalPlanDistance"     value="$(arg maxLocalPlanDistance)" />
+  <param name="horizonDistance"       value="$(arg horizonDistance)" />
+
+  <param name="minFollowingDistance"     value="$(arg minFollowingDistance)"  /> <!-- should be bigger than Distance to follow -->
+  <param name="minDistanceToAvoid"     value="$(arg minDistanceToAvoid)" /> <!-- should be smaller than minFollowingDistance and larger than maxDistanceToAvoid -->
+  <param name="maxDistanceToAvoid"     value="$(arg maxDistanceToAvoid)"  /> <!-- should be smaller than minDistanceToAvoid -->
+  <param name="speedProfileFactor"    value="$(arg speedProfileFactor)"  />
+
+  <param name="smoothingDataWeight"    value="$(arg smoothingDataWeight)"  />
+  <param name="smoothingSmoothWeight"    value="$(arg smoothingSmoothWeight)"  />
+
+  <param name="horizontalSafetyDistance"  value="$(arg horizontalSafetyDistance)"  />
+  <param name="verticalSafetyDistance"  value="$(arg verticalSafetyDistance)"  />
+
+  <param name="enableSwerving"       value="$(arg enableSwerving)"  />
+  <param name="enableFollowing"       value="$(arg enableFollowing)" />
+  <param name="enableTrafficLightBehavior" value="$(arg enableTrafficLightBehavior)" />
+  <param name="enableStopSignBehavior"   value="$(arg enableStopSignBehavior)" />
+  <param name="enableLaneChange"       value="$(arg enableLaneChange)" />
+
+  <param name="width"           value="$(arg width)"  />
+  <param name="length"           value="$(arg length)"  />
+  <param name="wheelBaseLength"       value="$(arg wheelBaseLength)"  />
+  <param name="turningRadius"        value="$(arg turningRadius)"  />
+  <param name="maxSteerAngle"       value="$(arg maxSteerAngle)" />
+
+  <param name="steeringDelay"       value="$(arg steeringDelay)" />
+  <param name="minPursuiteDistance"     value="$(arg minPursuiteDistance)"  />
+  <param name="additionalBrakingDistance" value="$(arg additionalBrakingDistance)"  />
+
+  <param name="giveUpDistance" value="$(arg giveUpDistance)"  />
+  <param name="maxAcceleration"       value="$(arg maxAcceleration)" />
+  <param name="maxDeceleration"       value="$(arg maxDeceleration)" />
+
+  <param name="velocitySource"      value="$(arg localVelocitySource)" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info) "" -->
+
+  </node>
+  <!-- Trajectory Evaluation Specific Parameters -->
+
+  <arg name="enablePrediction"       default="true" />
+<!--  <arg name="horizontalSafetyDistance"   default="1.2" /> -->
+<!--  <arg name="verticalSafetyDistance"     default="0.8" /> -->
+
+  <node pkg="op_local_planner" type="op_trajectory_evaluator" name="op_trajectory_evaluator" output="screen">
+
+    <param name="enablePrediction"       value="$(arg enablePrediction)" />
+    <param name="horizontalSafetyDistance"   value="$(arg horizontalSafetyDistance)" />
+    <param name="verticalSafetyDistance"   value="$(arg verticalSafetyDistance)" />
+
+  </node>
+<!--mpc follower-->
+
+ <arg name="ns" default="/"/>
+  <arg name="show_debug_info" default="false" doc="flag to display debug info" />
+  <arg name="ctrl_period" default="0.03" doc="control period [s]"/>
+  <arg name="traj_resample_dist" default="0.1" doc="ath resampling interval [m]"/>
+  <arg name="enable_yaw_recalculation" default="true" doc="flag for recalculation of yaw angle after resampling"/>
+  <arg name="admisible_position_error" default="15.0" doc="stop mpc calculation when error is larger than the following value"/>
+  <arg name="admisible_yaw_error_deg" default="90.0" doc="stop mpc calculation when error is larger than the following value"/>
+  <arg name="enable_path_smoothing" default="true" doc="flag for path smoothing"/>
+  <arg name="path_smoothing_times" default="4" doc="number of times of applying path smoothing filter"/>
+  <arg name="path_filter_moving_ave_num" default="35" doc="param of moving average filter for path smoothing "/>
+  <arg name="curvature_smoothing_num" default="35" doc="point-to-point index distance used in curvature calculation : curvature is calculated from three points p(i-num), p(i), p(i+num)"/>
+  <arg name="steering_lpf_cutoff_hz" default="3.0" doc="cutoff frequency of lowpass filter for steering command [Hz]"/>
+  <arg name="qp_solver_type" default="unconstraint_fast" doc="optimization solver type. option is unconstraint_fast, unconstraint, and qpoases_hotstart"/>
+  <arg name="qpoases_max_iter" default="500" doc="max iteration number for quadratic programming"/>
+  <arg name="vehicle_model_type" default="kinematics" doc="vehicle model type for mpc prediction. option is kinematics, kinematics_no_delay, and dynamics"/>
+
+  <!-- MPC design parameters -->
+  <arg name="mpc_prediction_horizon" default="200" doc="prediction horizon step"/> <!--70-->
+  <arg name="mpc_prediction_sampling_time" default="0.02" doc="prediction horizon period [s]"/> <!--0.1-->
+  <arg name="mpc_weight_lat_error" default="0.01" doc="lateral error weight in matrix Q"/>
+  <arg name="mpc_weight_heading_error" default="0.1" doc="heading error weight in matrix Q"/>
+  <arg name="mpc_weight_heading_error_squared_vel_coeff" default="0.15" doc="heading error * velocity weight in matrix Q"/>
+  <arg name="mpc_weight_steering_input" default="1.0" doc="steering error weight in matrix R"/>
+  <arg name="mpc_weight_steering_input_squared_vel_coeff" default="0.1" doc="steering error * velocity weight in matrix R"/>
+  <arg name="mpc_weight_lat_jerk" default="0.3" doc="lateral jerk weight in matrix R"/>
+  <arg name="mpc_weight_terminal_lat_error" default="1.5" doc="terminal lateral error weight in matrix Q to improve mpc stability"/>
+  <arg name="mpc_weight_terminal_heading_error" default="0.5" doc="terminal heading error weight in matrix Q to improve mpc stability"/>
+  <arg name="mpc_zero_ff_steer_deg" default="1.0" doc="threshold that feed-forward angle becomes zero"/>
+  <arg name="delay_compensation_time" default="0.0" doc="steering input delay time for delay compensation"/>
+
+  <arg name="vehicle_model_steer_tau" default="0.2" doc="steering dynamics time constant (1d approzimation) [s]"/>
+  <arg name="vehicle_model_wheelbase" default="1.12" doc="wheel base length [m]"/>
+  <arg name="steer_lim_deg" default="27.5" doc="steering angle limit [deg]"/>
+  <arg name="steering_gear_ratio" default="72.72" doc="steering gear ratio"/>
+ 
+  <group ns="$(arg ns)">
+
+    <node pkg="mpc_follower" type="mpc_waypoints_converter" name="mpc_waypoints_converter" output="screen"/>
+
+    <node pkg="mpc_follower" type="mpc_follower" name="mpc_follower" output="screen">
+
+      <!-- system -->
+      <param name="ctrl_cmd_interface" value="all"/>
+      <param name="in_waypoints_name" value="/mpc_waypoints"/>
+      <param name="in_vehicle_status_name" value="/vehicle_status"/>
+      <param name="in_selfpose_name" value="/current_pose"/>
+      <param name="out_twist_name" value="/twist_raw"/>
+      <param name="out_vehicle_cmd_name" value="/ctrl_raw"/>
+
+      <!-- paramters -->
+      <param name="ctrl_period" value="$(arg ctrl_period)"/>
+      <param name="traj_resample_dist" value="$(arg traj_resample_dist)"/>
+      <param name="admisible_position_error" value="$(arg admisible_position_error)"/>
+      <param name="admisible_yaw_error_deg" value="$(arg admisible_yaw_error_deg)"/>
+      <param name="path_smoothing_times" value="$(arg path_smoothing_times)"/>
+      <param name="show_debug_info" value="$(arg show_debug_info)"/>
+      <param name="enable_yaw_recalculation" value="$(arg enable_yaw_recalculation)"/>
+      <param name="enable_path_smoothing" value="$(arg enable_path_smoothing)"/>
+      <param name="path_filter_moving_ave_num" value="$(arg path_filter_moving_ave_num)"/>
+      <param name="curvature_smoothing_num" value="$(arg curvature_smoothing_num)"/>
+      <param name="steering_lpf_cutoff_hz" value="$(arg steering_lpf_cutoff_hz)"/>
+      <param name="qp_solver_type" value="$(arg qp_solver_type)"/>
+      <param name="qpoases_max_iter" value="$(arg qpoases_max_iter)"/>
+      <param name="vehicle_model_type" value="$(arg vehicle_model_type)"/>
+      <param name="mpc_prediction_horizon" value="$(arg mpc_prediction_horizon)"/>
+      <param name="mpc_prediction_sampling_time" value="$(arg mpc_prediction_sampling_time)"/>
+      <param name="mpc_weight_lat_error" value="$(arg mpc_weight_lat_error)"/>
+      <param name="mpc_weight_heading_error" value="$(arg mpc_weight_heading_error)"/>
+      <param name="mpc_weight_heading_error_squared_vel_coeff" value="$(arg mpc_weight_heading_error_squared_vel_coeff)"/>
+      <param name="mpc_weight_steering_input" value="$(arg mpc_weight_steering_input)"/>
+      <param name="mpc_weight_steering_input_squared_vel_coeff" value="$(arg mpc_weight_steering_input_squared_vel_coeff)"/>
+      <param name="mpc_weight_lat_jerk" value="$(arg mpc_weight_lat_jerk)"/>
+      <param name="mpc_weight_terminal_lat_error" value="$(arg mpc_weight_terminal_lat_error)"/>
+      <param name="mpc_weight_terminal_heading_error" value="$(arg mpc_weight_terminal_heading_error)"/>
+      <param name="mpc_zero_ff_steer_deg" value="$(arg mpc_zero_ff_steer_deg)"/>
+      <param name="delay_compensation_time" value="$(arg delay_compensation_time)"/>
+      <param name="vehicle_model_steer_tau" value="$(arg vehicle_model_steer_tau)"/>
+      <param name="vehicle_model_wheelbase" value="$(arg vehicle_model_wheelbase)"/>
+      <param name="steer_lim_deg" value="$(arg steer_lim_deg)"/>
+      <param name="steering_gear_ratio" value="$(arg steering_gear_ratio)"/>
+    </node>
+
+  </group>
+
+<!-- twist filter -->
+ <!-- For twist_filter -->
+  <arg name="wheel_base" default="2.7" />
+  <arg name="lateral_accel_limit" default="5.0" />
+  <arg name="lateral_jerk_limit" default="5.0" />
+  <arg name="lowpass_gain_linear_x" default="0.0" />
+  <arg name="lowpass_gain_angular_z" default="0.0" />
+  <arg name="lowpass_gain_steering_angle" default="0.0" />
+
+  <param name="vehicle_info/wheel_base" value="$(arg wheel_base)" />
+
+  <!-- For twist_gate -->
+  <arg name="loop_rate" default="30.0" />
+  <arg name="use_decision_maker" default="false" />
+
+  <!-- rosrun waypoint_follower twist_filter -->
+  <node pkg="twist_filter" type="twist_filter" name="twist_filter" output="log">
+    <param name="lateral_accel_limit" value="$(arg lateral_accel_limit)" />
+    <param name="lateral_jerk_limit" value="$(arg lateral_jerk_limit)" />
+    <param name="lowpass_gain_linear_x" value="$(arg lowpass_gain_linear_x)" />
+    <param name="lowpass_gain_angular_z" value="$(arg lowpass_gain_angular_z)" />
+    <param name="lowpass_gain_steering_angle" value="$(arg lowpass_gain_steering_angle)" />
+  </node>
+
+  <node pkg="twist_gate" type="twist_gate" name="twist_gate" output="log">
+    <param name="loop_rate" value="$(arg loop_rate)" />
+    <param name="use_decision_maker" value="$(arg use_decision_maker)" />
+  </node>
+
+  <node name="goal_intializer" pkg="goal_initial" type="goal_initial"/> 
+
+    <!-- ================================Detection====================================== -->
+    
+<arg name="publish_topic_name" default="/local_road_points" />
+    <arg name="points_map_subscribe_name" default="/points_map" />
+    <arg name="localizer_pose_subscribe_name" default="/localizer_pose" />
+    <arg name="road_width" default="6" />
+    <arg name="find_road_radius" default="50.0" />
+
+    <node name="road_extractor" pkg="lidar_quadtree_cluster" type="road_extractor" output="screen" >
+        <param name="publish_topic_name" value="$(arg publish_topic_name)"/>
+        <param name="points_map_subscribe_name" value="$(arg points_map_subscribe_name)"/>
+        <param name="localizer_pose_subscribe_name" value="$(arg localizer_pose_subscribe_name)"/>
+        <param name="road_width" value="$(arg road_width)"/>
+        <param name="find_road_radius" value="$(arg find_road_radius)"/>
+    </node>
+
+
+  <arg name="points_raw_topic" default="/points_raw"/>
+  <arg name="road_points_topic" default="/local_road_points"/>
+
+  <arg name="height_from_ground_to_lidar" default="1.03"/>
+  <arg name="x_limit_forward" default="25.0" />
+  <arg name="x_limit_back" default="-10.0" />
+  <arg name="y_limit" default="20.0" /> <!-- each left and right of the car -->
+  <arg name="z_high_limit" default="0.50" />
+  <arg name="erase_road_threshold" default="0.2" />
+  <arg name="box_threshold" default="0.01" />
+
+  <arg name="my_car_width" default="1.5" />
+  <arg name="my_car_height" default="2.0" />
+  <arg name="max_cluster_size" default="100" />
+  
+  <node name="quadtree_segmentation" pkg="lidar_quadtree_cluster" type="quadtree_segmentation" output="screen" >
+
+    <param name="points_raw_topic" value="$(arg points_raw_topic)" />
+    <param name="road_points_topic" value="$(arg road_points_topic)" />
+    <param name="height_from_ground_to_lidar" value="$(arg height_from_ground_to_lidar)" />
+    <param name="x_limit_forward" value="$(arg x_limit_forward)" />
+    <param name="x_limit_back" value="$(arg x_limit_back)" />
+    <param name="y_limit" value="$(arg y_limit)" />
+    <param name="z_high_limit" value="$(arg z_high_limit)" />
+    <param name="erase_road_threshold" value="$(arg erase_road_threshold)" />
+    <param name="box_threshold" value="$(arg box_threshold)"/>
+
+    <param name="my_car_width" value="$(arg my_car_width)"/>
+    <param name="my_car_height" value="$(arg my_car_height)"/>
+    <param name="max_cluster_size" value="$(arg max_cluster_size)"/>
+  </node>
+  <!-- lidar_kf_contour_track -->
+  <arg name="vehicle_width" default="1.5" />
+  <arg name="vehicle_length" default="2.0" />  
+  <arg name="min_object_size" default="0.1" />
+  <arg name="max_object_size" default="30.0" />
+  <arg name="polygon_quarters" default="8" />
+  <arg name="polygon_resolution" default="0.5" />
+  <arg name="tracking_type" default="2" /> <!-- 0 for association only, 1 for simple kf tracking, 2 for smart contour tracker -->
+  <arg name="max_association_distance" default="0.1" />
+  <arg name="max_association_size_diff" default="2.5" />
+  
+  <arg name="max_remeber_time" default="3" />
+  <arg name="trust_counter" default="5" />
+    
+  <arg name="enableSimulationMode" default="false" />
+  <arg name="enableStepByStepMode" default="false" />
+  
+  <arg name="vector_map_filter_distance" default="0" /> <!-- set 0 to disable vector map filtering  -->
+  <arg name="enableLogging" default="false" />
+
+  <node pkg="lidar_kf_contour_track" type="lidar_kf_contour_track" name="lidar_kf_contour_track" output="screen">
+    <param name="vehicle_width" value="$(arg vehicle_width)" />
+    <param name="vehicle_length" value="$(arg vehicle_length)" />    
+    <param name="min_object_size" value="$(arg min_object_size)" />
+    <param name="max_object_size" value="$(arg max_object_size)" />
+    <param name="polygon_quarters" value="$(arg polygon_quarters)" />
+    <param name="polygon_resolution" value="$(arg polygon_resolution)" />
+    <param name="tracking_type" value="$(arg tracking_type)" /> 
+    <param name="max_association_distance" value="$(arg max_association_distance)" />
+    <param name="max_association_size_diff" value="$(arg max_association_size_diff)" />
+    
+    <param name="max_remeber_time" value="$(arg max_remeber_time)" />
+    <param name="trust_counter" value="$(arg trust_counter)" />    
+    
+    <param name="enableSimulationMode" value="$(arg enableSimulationMode)" />
+    <param name="enableStepByStepMode" value="$(arg enableStepByStepMode)" />
+      
+    <param name="vector_map_filter_distance" value="$(arg vector_map_filter_distance)" />
+    <param name="enableLogging" value="$(arg enableLogging)" />
+  </node>
+
+<!--yolo box-->
+  <arg name="yolo_debug" default="false"/>
+  <node pkg="yolo_finder_synced" name="yolo_finder_synced" type="yolo_finder_synced" output="screen" />
+  <param name="yolo_finder_synced/debug" value="$(arg yolo_debug)"/>
+
+
+<!--yolo3-->
+  <arg name="gpu_device_id" default="0"/>
+  <arg name="score_threshold" default="0.30"/>
+  <arg name="nms_threshold" default="0.30"/>
+
+  <arg name="network_definition_file" default="$(find vision_darknet_detect)/darknet/cfg/yolov3.cfg"/>
+  <arg name="pretrained_model_file" default="/home/autoware/shared_dir/yolo/yolov3.weights"/>
+  <arg name="names_file" default="$(find vision_darknet_detect)/darknet/cfg/coco.names"/>
+
+  <arg name="camera_id" default="/"/>
+  <arg name="image_src" default="/camera/image_raw"/>
+
+  <node pkg="vision_darknet_detect" name="vision_darknet_detect" type="vision_darknet_detect" output="screen">
+    <param name="network_definition_file" type="str" value="$(arg network_definition_file)"/>
+    <param name="pretrained_model_file" type="str" value="$(arg pretrained_model_file)"/>
+    <param name="score_threshold" type="double" value="$(arg score_threshold)"/>
+    <param name="nms_threshold" type="double" value="$(arg nms_threshold)"/>
+    <param name="gpu_device_id" type="int" value="$(arg gpu_device_id)"/>
+    <param name="image_raw_node" type="str" value="$(arg camera_id)$(arg image_src)"/>
+    <param name="names_file" type="str" value="$(arg names_file)"/>
+  </node>
+
+  <node pkg="detected_objects_visualizer" type="visualize_rects" name="yolo3_rects"
+        output="screen">
+    <param name="image_src" value="$(arg image_src)"/>
+    <param name="image_out" value="/image_rects"/>
+    <param name="object_src" value="/detection/image_detector/objects"/> <!-- this is fixed by definition -->
+  </node>
+
+  <!-- pure pursuit -->
+ <arg name="is_linear_interpolation" default="True"/>
+  <arg name="const_velocity" default="4.0"/> <!-- no use -->
+  <arg name="publishes_for_steering_robot" default="False"/>
+  <arg name="add_virtual_end_waypoints" default="False"/>
+  <arg name="const_lookahead_distance" default="2.0"/>
+  <arg name="lookahead_ratio" default="1.2"/> <!-- no use -->
+  <arg name="minimum_lookahead_distance" default="3.0"/><!-- no use -->
+  <arg name="velocity_source" default="0"/>
+
+  <node pkg="pure_pursuit" type="pure_pursuit" name="pure_pursuit" output="log">
+    <param name="is_linear_interpolation" value="$(arg is_linear_interpolation)"/>
+    <param name="publishes_for_steering_robot" value="$(arg publishes_for_steering_robot)"/>
+    <param name="add_virtual_end_waypoints" value="$(arg add_virtual_end_waypoints)"/>
+    <param name="const_lookahead_distance" value="$(arg const_lookahead_distance)"/>
+    <param name="const_velocity" value="$(arg const_velocity)"/>
+    <param name="lookahead_ratio" value="$(arg lookahead_ratio)"/>
+    <param name="minimum_lookahead_distance" value="$(arg minimum_lookahead_distance)"/>
+    <param name="velocity_source" value="$(arg velocity_source)"/>
+  </node>
+
+  <!--twtwtwtw-->
+  <!--<node pkg="tw_collect_rl_data" type="collect" name="collect_rl_data_tw">
+      <param name="path" value="/home/autoware/shared_dir/tw_rl/"/>
+      <param name="name" value="v0_1_basic_data"/>
+  </node>-->
+
+
+
+</launch>

@@ -1,0 +1,24 @@
+
+not_use_mission_handler: false
+
+mission_names: ["parking"]
+mission_types: #parking : 0, obstacle_avoidance: 1, traffic: 2, emergency_obstacle: 3
+  [0]
+mission_activate_ary: [
+  true
+]
+#above 3 vectors must have same length
+
+parking: 
+  poly: [93.200, 36.690, 79.209, 34.542, 82.678, 12.577, 96.018, 15.367]
+  seeking_velocity: 2.0
+  parking_time: 4.0
+  n_goal : 2
+  driving_velocity: 6.0
+  #(x_pose, y_pose, z_ori, w_ori) * 2 * n_goal_area. consider only xy plane since /move_base_simple/goal handles only 2d
+  goal_pose : [85.696, 21.017, 0.9561, -0.2929, 88.068, 26.121, -0.6758, 0.7370,
+               85.500, 17.763, 0.9527, -0.3037, 88.351, 23.190, -0.6758, 0.7370]
+  #(x_pose, y_pose) * 4 * n_goal_area
+  goal_area : [86.882,23.072,82.199,20.064,83.715,18.234,87.079,20.449,
+              87.079,20.449,82.555,17.155,83.844,15.48,87.531,17.632]
+               

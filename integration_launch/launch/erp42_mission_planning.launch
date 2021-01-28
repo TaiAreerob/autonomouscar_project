@@ -1,0 +1,46 @@
+<launch>
+
+  <!-- send table.xml to param server -->
+  <arg name="topic_pose_stamped" default="/ndt_pose" />
+  <arg name="topic_twist_stamped" default="/estimate_twist" />
+  <arg name="sim_mode" default="false" />
+
+  <group unless="$(arg sim_mode)">
+    <node pkg="autoware_connector" type="can_status_translator" name="can_status_translator" output="log" />
+    <node pkg="topic_tools" type="relay" name="pose_relay" output="log" args="$(arg topic_pose_stamped) /current_pose"/>
+    <node pkg="topic_tools" type="relay" name="vel_relay" output="log" args="$(arg topic_twist_stamped) /current_velocity"/>
+  </group>
+
+  <group if="$(arg sim_mode)">
+    <node pkg="topic_tools" type="relay" name="pose_relay" output="log" args="/sim_pose /current_pose"/>
+    <node pkg="topic_tools" type="relay" name="vel_relay" output="log" args="/sim_velocity /current_velocity"/>
+  </group>
+
+  <arg name="pathDensity"           default="1.0" /> <!-- distance between each two waypoints-->
+  <arg name="enableSmoothing"         default="false" /> <!-- 1 or 0 -->
+  <arg name="enableLaneChange"         default="false" /> <!-- 1 or 0 -->
+  <arg name="enableRvizInput"         default="1" /> <!-- 1 or 0 -->
+  <arg name="enableReplan"            default="false" /> <!-- 1 or 0 -->
+  <arg name="velocitySource"          default="1" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info) "" -->
+  <arg name="mapSource"             default="0" /> <!-- Autoware=0, Vector Map Folder=1, kml file=2 -->
+  <arg name="mapFileName"           default="" /> <!-- incase of kml map source -->
+  <arg name="enableDynamicMapUpdate"       default="false" />
+
+<node pkg="op_global_planner" type="op_global_planner" name="op_global_planner" output="screen">
+
+    <param name="pathDensity"         value="$(arg pathDensity)" />
+    <param name="enableSmoothing"       value="$(arg enableSmoothing)" />
+    <param name="enableLaneChange"       value="$(arg enableLaneChange)" />
+    <param name="enableRvizInput"       value="$(arg enableRvizInput)" />
+    <param name="enableReplan"         value="$(arg enableReplan)" />
+    <param name="velocitySource"       value="$(arg velocitySource)" />
+    <param name="mapSource"         value="$(arg mapSource)" />
+    <param name="mapFileName"         value="$(arg mapFileName)" />
+
+    <param name="enableDynamicMapUpdate"   value="$(arg enableDynamicMapUpdate)" />
+
+  </node>
+
+
+</launch>
+

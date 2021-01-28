@@ -1,0 +1,7 @@
+<launch>
+    <node pkg="stopline_dist_detector" type="stopline_dist_detector" name="stopline_dist_detector"/>
+    <rosparam param="stopline_dist_detector/a_vec">[-0.661, 1.835, 1.677, -0.654, -0.677, 1.564, -0.004, -11.643, -46.550]</rosparam>
+    <rosparam param="stopline_dist_detector/b_vec">[-1, -1, -1, -1,-1,-1,-1,-1,-1]</rosparam>
+    <rosparam param="stopline_dist_detector/c_vec">[-88.155, -288.085, -303.181, -25.131, -49.674, -206.537, -120.085, -1714.175, -1729.627]</rosparam>
+    
+</launch>

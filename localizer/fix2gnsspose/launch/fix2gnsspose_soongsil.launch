@@ -1,0 +1,31 @@
+<launch>
+
+  <arg name="a1" default="-0.8322055191"/>
+  <arg name="b1" default="-0.5700453073"/>
+  <arg name="c1" default="-0.0769854635"/>
+  <arg name="d1" default="70172.000"/>
+  <arg name="a2" default="0.3713805154"/>
+  <arg name="b2" default="-0.6278480738"/>
+  <arg name="c2" default="0.7333024442"/>
+  <arg name="d2" default="841821.375"/>
+  <arg name="a3" default="0.0096075223"/>
+  <arg name="b3" default="0.0035236785"/>
+  <arg name="c3" default="-0.0240874565"/>
+  <arg name="d3" default="108008.6796875"/>
+
+  <node pkg="fix2gnsspose" type="fix2tfpose" name="fix2tfpose">
+    <param name="a1" value="$(arg a1)"/>
+    <param name="b1" value="$(arg b1)"/>
+    <param name="c1" value="$(arg c1)"/>
+    <param name="d1" value="$(arg d1)"/>
+    <param name="a2" value="$(arg a2)"/>
+    <param name="b2" value="$(arg b2)"/>
+    <param name="c2" value="$(arg c2)"/>
+    <param name="d2" value="$(arg d2)"/>
+    <param name="a3" value="$(arg a3)"/>
+    <param name="b3" value="$(arg b3)"/>
+    <param name="c3" value="$(arg c3)"/>
+    <param name="d3" value="$(arg d3)"/>
+  </node>
+
+</launch>

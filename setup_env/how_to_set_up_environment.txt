@@ -1,0 +1,53 @@
+# ubuntu 18.04 & autoware nvidia docker 1.12.0 installation guide
+# this is tested in Ubuntu 18.04 with GTX rtx 2080ti
+1. install ubuntu 18.04
+    1.1. If you have problem in booting, you should edit grub init script
+        1) when you enter grub, press e
+        2) then you can see "quite splash" in the long line around bottom area
+        3) replace "quite splash" with "nomodeset" without ""
+        4) press Ctrl+x to start. You don't have to do this after installing Nvidia-driver
+2. install nvidia driver (>= 410.48) 
+    press window key, type "Software.." and click "Software & Updates". 
+    Go to Additional Drivers, pick one driver, and press Apply changes.
+    reboot
+
+    how to test : type nvidia-smi in terminal. You can see the version you chose
+
+3. install cuda 10.0. Since autoware in ros melodic is compatible with cuda 10.0, we must install it (not 10.1 or 10.2!)
+    Go to download site : https://developer.nvidia.com/cuda-downloads
+    Set options Linux, x86_64, Ubuntu, 18.04, and download runfile (local)
+    
+    exec the runfile. Press any options is ok except installing nvidia driver(we have already installed it in 1!)
+    reboot
+
+    how to test : type nvcc -V in terminal. You can see the cuda version 10.0 (this can be different from what you see with
+        "nvidia-smi", but it's ok)
+4. install docker-ce (>=19.03) and autoware docker image 
+   go to https://gitlab.com/autowarefoundation/autoware.ai/autoware/-/wikis/Generic-x86-Docker 
+   1. follow "Install docker"
+   2. $ sudo adduser $USER docker   
+   3. follow "Case 1:Using Autoware Docker Containers with Pre-Built Source Code Included"
+   4. (for non-gpu user only)
+      $ cd ~/docker/generic
+      $ vi ./run.sh
+      in line 6 - change to : CUDA "off" 
+      in line 8 - TAG_PREFIX="1.12.0" 
+   5. $ ./run.sh 
+
+
+
+5. install nvidia/cuda docker image
+    ** the guides are from this site : https://github.com/NVIDIA/nvidia-docker **
+    $ distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+    $ curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+    $ curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+ 
+    $ sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+    $ sudo systemctl restart docker
+
+    how to test : docker run --gpus all nvidia/cuda:10.0-base nvidia-smi
+
+
+#serial device settings
+sudo apt-get install ros-melodic-serial
+sudo adduser $USER dialout

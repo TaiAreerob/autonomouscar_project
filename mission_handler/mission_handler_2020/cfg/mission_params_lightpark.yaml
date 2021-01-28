@@ -1,0 +1,12 @@
+#all coordinates are "map"
+ #x, y, x, y, ...
+not_use_mission_handler: false
+poly:
+  obstacle_avoidance : [2.904, 4.666, 36.950, 39.192, 70.372, 9.811, 39.642, -28.964]
+
+mission_activate_ary: [
+  1] #avoidance obstacle
+
+obstacle_avoidance:
+  avoidance_velocity: 5.0
+  driving_velocity: 3.0

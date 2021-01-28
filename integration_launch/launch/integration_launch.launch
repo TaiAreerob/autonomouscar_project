@@ -1,0 +1,159 @@
+<launch>
+
+ <arg name="path_pcd" default='"/home/autoware/shared_dir/map/soongsil/points_map/20190512_soongsil_0.2.pcd"' />
+<!-- ==================================== sensor & erp42 driver ======================================= -->
+  <!-- imu_driver -->
+  <node pkg="mysen_imu_driver" type="driver_node" name="mysen_imu">
+    <param name="port" value="/dev/mysen_imu"/>
+    <param name="mode" value="6"/>
+  </node>
+
+  <!-- gps driver -->
+  <node name="nmea_serial_driver_node" pkg="nmea_navsat_driver" type="nmea_serial_driver" output="screen">
+    <param name="port" value="/dev/garmin19x"/>
+    <param name="baud" value="38400" />
+    <param name="frame_id" value="gps" />
+    <param name="use_GNSS_time" value="False" />
+    <param name="time_ref_source" value="gps" />
+    <param name="useRMC" value="False" />
+  </node>
+
+  <!-- velodyne 16 -->
+  <arg name="pcap" default="" />
+  <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
+  <arg name="min_range" default="0.4" />
+  <arg name="max_range" default="130.0" />
+  <arg name="model" default="VLP16"/>
+  <arg name="topic_name" default="points_raw"/>
+
+  <!-- start nodelet manager and driver nodelets -->
+  <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
+    <arg name="model" value="$(arg model)"/>
+    <arg name="pcap" value="$(arg pcap)"/>
+  </include>
+
+  <!-- start cloud nodelet -->
+  <node pkg="nodelet" type="nodelet" name="cloud_nodelet"
+        args="load velodyne_pointcloud/CloudNodelet velodyne_nodelet_manager">
+    <param name="calibration" value="$(arg calibration)"/>
+    <param name="min_range" value="$(arg min_range)"/>
+    <param name="max_range" value="$(arg max_range)"/>
+    <remap from="velodyne_points" to="$(arg topic_name)"/>
+  </node>
+
+  <!-- erp42 driver -->
+  <node pkg="erp42_driver" type="erp42_main" name="erp42_main">
+    <param name="port" value="/dev/erp42"/>
+    <param name="frequency" value="20"/>
+    <param name="wheelbase" value="1.12"/>
+    <param name="maximum_steering_angle" value="2000"/>
+    <param name="minimum_turning_radius" value="2.6"/>
+    <param name="initWriteThread" value="true"/>
+    <param name="settling_time" value="1.7"/>
+    <param name="weight" value="1.1"/>
+    <param name="shift" value="20.0"/>
+    <param name="steer_kp" value="1.0"/>
+    <param name="steer_ki" value="0.0"/>
+    <param name="steer_kd" value="0.0"/>
+    <param name="brake_max" value="100"/>
+    <param name="brake_kp" value="60"/>
+    <param name="brake_ki" value="0.0"/>
+    <param name="brake_kd" value="0.0"/>
+    <param name="accel_kp" value="1.0"/>
+    <param name="accel_ki" value="0.1"/>
+    <param name="accel_kd" value="0.0"/>
+    
+    <param name="C0" value="0.108"/>
+    <param name="C1" value="0.0184"/>
+  </node>
+
+  <rosparam command="load" file="$(find ndt_launch)/cfg/set_up.yaml" />
+
+<!-- ================================== ndt matching launch ========================================== -->
+	<arg name="method_type" default="0" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
+  	<arg name="use_gnss" default="0" />
+  	<arg name="use_odom" default="true" />
+  	<arg name="use_imu" default="false" />
+  	<arg name="imu_upside_down" default="false" />
+  	<arg name="imu_topic" default="/imu" />
+  	<arg name="queue_size" default="1" />
+  	<arg name="offset" default="linear" />
+  	<arg name="get_height" default="false" />
+  	<arg name="use_local_transform" default="false" />
+  	<arg name="sync" default="false" />
+  	<arg name="output_log_data" default="false" />
+
+  <node pkg="lidar_localizer" type="ndt_matching" name="ndt_matching" output="log">
+    <param name="method_type" value="$(arg method_type)" />
+    <param name="use_gnss" value="$(arg use_gnss)" />
+    <param name="use_odom" value="$(arg use_odom)" />
+    <param name="use_imu" value="$(arg use_imu)" />
+    <param name="imu_upside_down" value="$(arg imu_upside_down)" />
+    <param name="imu_topic" value="$(arg imu_topic)" />
+    <param name="queue_size" value="$(arg queue_size)" />
+    <param name="offset" value="$(arg offset)" />
+    <param name="get_height" value="$(arg get_height)" />
+    <param name="use_local_transform" value="$(arg use_local_transform)" />
+    <param name="output_log_data" value="$(arg output_log_data)" />
+    <remap from="/points_raw" to="/sync_drivers/points_raw" if="$(arg sync)" />
+  </node>
+
+<!-- voxel grid fillter -->
+  <arg name="node_name" default="voxel_grid_filter" />
+  <arg name="points_topic" default="points_raw" />
+  <arg name="output_log" default="false" />
+  <arg name="voxel_leaf_size" default="2.0" />
+  <node pkg="points_downsampler" name="$(arg node_name)" type="$(arg node_name)">
+    <param name="points_topic" value="$(arg points_topic)" />
+    <remap from="/points_raw" to="/sync_drivers/points_raw" if="$(arg sync)" />
+    <param name="output_log" value="$(arg output_log)" />
+    <param name="voxel_leaf_size" value="$(arg voxel_leaf_size)" />
+  </node>
+
+
+<!--points map loader-->
+<arg name="scene_num" default="noupdate" />
+ <arg name="path_area_list" default='""' />
+
+ <node pkg="map_file" type="points_map_loader" name="points_map_loader" >
+  <rosparam subst_value="true">
+    area: $(arg scene_num)
+    arealist_path: $(arg path_area_list)
+    pcd_paths: [ $(arg path_pcd) ]
+  </rosparam>
+ </node>
+
+<!-- tf -->
+  <node pkg="tf"  type="static_transform_publisher" name="world_to_map" args="0 0 0 0 0 0 /world /map 10" />
+  <node pkg="tf"  type="static_transform_publisher" name="map_to_mobility" args="0 0 0 0 0 0 /map /mobility 10" />
+
+<!-- setup_tf.launch -->
+ <arg name="x" default="0.62"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.75"/>
+  <arg name="yaw" default="0.0"/>
+  <arg name="pitch" default="0.0"/>
+  <arg name="roll" default="0.0"/>
+  <arg name="frame_id" default="base_link"/>
+  <arg name="child_frame_id" default="velodyne"/>
+  <arg name="period_in_ms" default="10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer" args="$(arg x) $(arg y) $(arg z) $(arg yaw) $(arg pitch) $(arg roll) $(arg frame_id) $(arg child_frame_id) $(arg period_in_ms)"/>
+
+<!-- vector map -->
+  <node pkg="map_file" type="vector_map_loader" name="vector_map_loader" output="screen">
+    <param name="load_mode" value="directory" />
+    <param name="map_dir" value="$(env HOME)/shared_dir/map/soongsil/vector_map" />
+    <param name="host_name" value="133.6.148.90" />
+    <param name="port" value="80" />
+    <param name="user" value="" />
+    <param name="password" value="" />
+  </node>
+
+<!-- local path planning -->
+  <rosparam command="load" file="$(find local_path_planning)/cfg/qt_params.yaml"/>
+  <node name="qt_detect_node" pkg="local_path_planning" type="qt_detect_node" output="screen" />
+  <node name="extract_local_road_points" pkg="local_path_planning" type="extract_local_road_points" output="screen" />
+  <include file="$(find obb_generator)/launch/obb_generator_launch.launch" />
+
+</launch>  

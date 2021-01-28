@@ -1,0 +1,65 @@
+
+
+<launch>
+  <node pkg="ntrip_ros" type="ntripclient.py" name="ntrip_ros" output="screen">
+ 	 <param name="rtcm_topic" value="/ublox_gps/rtcm"/>
+ 	 <param name="ntrip_server" value="www.gnssdata.or.kr:2101"/>
+ 	 <param name="ntrip_user" value="pjm4142@naver.com"/>
+ 	 <param name="ntrip_pass" value="gnss"/>
+  <!-- <param name="ntrip_server" value="RTK2go.com:2101"/>
+ 	 <param name="ntrip_user" value="ssora"/>
+ 	 <param name="ntrip_pass" value="ckPryATB"/>-->
+ 	 <param name="ntrip_stream" value="SOUL-RTCM31"/> 
+ 	 <param name="nmea_gga" value="$GPGGA,120903.359,3729.770,N,12657.419,E,1,12,1.0,0.0,M,0.0,M,,*6C" /> 
+  </node>
+
+  <arg name="node_name" value="ublox_gps"/>
+ <!--<arg name="node_name" />-->
+ <arg name="param_file_name" value="zed-f9p"/>
+  <!--<arg name="param_file_name" doc="name of param file, e.g. rover" />-->
+  <arg name="output" default="screen" />
+  <arg name="respawn" default="true" />
+  <arg name="respawn_delay" default="30" />
+  <arg name="clear_params" value="false"/>
+  <!--<arg name="clear_params" default="true" />-->
+
+  <node pkg="ublox_gps" type="ublox_gps" name="$(arg node_name)"
+        output="$(arg output)" 
+        clear_params="$(arg clear_params)"
+        respawn="$(arg respawn)" 
+        respawn_delay="$(arg respawn_delay)">
+    <rosparam command="load" 
+              file="$(find ublox_gps)/config/$(arg param_file_name).yaml" />
+  </node>
+
+  <arg name="a1" default="-0.8322055191"/>
+  <arg name="b1" default="-0.5700453073"/>
+  <arg name="c1" default="-0.0769854635"/>
+  <arg name="d1" default="70172.000"/>
+  <arg name="a2" default="0.3713805154"/>
+  <arg name="b2" default="-0.6278480738"/>
+  <arg name="c2" default="0.7333024442"/>
+  <arg name="d2" default="841821.375"/>
+  <arg name="a3" default="0.0096075223"/>
+  <arg name="b3" default="0.0035236785"/>
+  <arg name="c3" default="-0.0240874565"/>
+  <arg name="d3" default="108008.6796875"/>
+
+  <node pkg="fix2gnsspose" type="fix2tfpose" name="fix2tfpose">
+    <param name="a1" value="$(arg a1)"/>
+    <param name="b1" value="$(arg b1)"/>
+    <param name="c1" value="$(arg c1)"/>
+    <param name="d1" value="$(arg d1)"/>
+    <param name="a2" value="$(arg a2)"/>
+    <param name="b2" value="$(arg b2)"/>
+    <param name="c2" value="$(arg c2)"/>
+    <param name="d2" value="$(arg d2)"/>
+    <param name="a3" value="$(arg a3)"/>
+    <param name="b3" value="$(arg b3)"/>
+    <param name="c3" value="$(arg c3)"/>
+    <param name="d3" value="$(arg d3)"/>
+  </node>
+
+  <node pkg="initial_orientation" type="orientation" name="orientation" />
+
+</launch>

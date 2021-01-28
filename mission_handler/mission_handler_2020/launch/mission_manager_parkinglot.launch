@@ -1,0 +1,6 @@
+<launch>
+	<rosparam command="load" file="$(find mission_handler_2020)/cfg/mission_params_parkinglot.yaml"/>
+	<node name="mission_manager" pkg="mission_handler_2020" type="mission_manager" output="screen"/>
+
+</launch>
+

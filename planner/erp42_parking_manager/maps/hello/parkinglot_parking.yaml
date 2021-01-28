@@ -1,0 +1,7 @@
+image: ./parkinglot_parking.pgm
+resolution: 0.05
+origin: [75, 10, 0.0]
+negate: 0
+occupied_thresh: 0.9
+free_thresh: 0.1
+

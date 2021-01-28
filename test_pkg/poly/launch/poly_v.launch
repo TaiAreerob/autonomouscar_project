@@ -1,0 +1,4 @@
+<launch>
+	<rosparam command="load" file="$(find poly)/cfg/poly_area.yaml"/>
+	<node name="poly" pkg="poly" type="poly" output="screen"/>
+</launch>

@@ -1,0 +1,54 @@
+
+not_use_mission_handler: false
+
+mission_names: ["parking", "obstacle_avoidance1", "traffic1", 
+  "traffic2"]
+mission_types: #parking : 0, obstacle_avoidance: 1, traffic: 2, emergency_obstacle: 3
+  [0, 1, 2, 2]
+mission_activate_ary: [
+  true, #parking
+  true, #obstacle avoidance 1
+  true, #traffic 1
+  true
+]
+#above 3 vectors must have same length
+
+
+#mission specific parameters - closely associated only with Mission.h
+parking: 
+  poly: [79.4554, 70.589, 78.8616, 59.6816, 44.4618, 59.0815, 44.402, 70.4082]
+  seeking_velocity: 3.0
+  parking_time: 4.0
+  n_goal : 2
+  driving_velocity: 3.0
+  #(x_pose, y_pose, z_ori, w_ori) * 2 * n_goal_area. consider only xy plane since /move_base_simple/goal handles only 2d
+  goal_pose : [62.711, 67.433, 0.9090, 0.4166, 68.796, 63.834, 0.989, -0.145, #goal1 ,62.600,66.787,0.8376, 0.5462
+               59.935, 67.559, 0.888, 0.459, 66.238, 63.936, 0.991, -0.133] #goal2
+  #(x_pose, y_pose) * 4 * n_goal_area
+  goal_area : [64.725, 66.342, 62.509, 70.500, 60.368, 69.430, 62.629, 65.101,
+               62.075, 65.983, 59.719, 70.637, 57.699, 69.702, 59.815, 65.127]
+obstacle_avoidance1: 
+  poly: [53.7516, -0.315867, 53.8926, -5.75708, 6.21381, -4.8943, 6.12119, 1.42535]
+  avoidance_velocity: 1.5
+  driving_velocity: 4.0
+  avoidance_distance: 4.5
+traffic1: 
+  poly: [75.983, 39.4829, 84.3532, 38.6987, 82.4428, 19.4372, 74.1938, 19.8179]
+  stopline_points : [75.983, 39.4829, 84.3532, 38.6987] #(x1, y1), (x2, y2). they are points on the stopline
+  type : "STRAIGHT" # only LEFT, STRAIGHT_3, STRAIGHT_4 are allowed
+  n_hole: 4
+  section: 1 #traffic light area identifier. must be aligned with traffic light sender node
+  traffic_velocity: 6
+  driving_velocity: 6
+  safety_margin: 2.0
+  max_waiting_time: 30
+traffic2: 
+  poly: [40.6748, 70.5201, 40.7346, 59.1934, 17.4277, 59.4931, 18.0134, 70.1342]
+  stopline_points : [17.4277, 59.4931, 18.0134, 70.1342]
+  type : "LEFT"
+  n_hole: 4
+  section: 2
+  traffic_velocity: 6
+  driving_velocity: 6
+  safety_margin: 2.0
+  max_waiting_time: 30

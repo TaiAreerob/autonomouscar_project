@@ -1,0 +1,129 @@
+ #x, y, x, y, ...
+not_use_mission_handler: False
+
+mission_names: ["parking", "obstacle_avoidance1", "traffic1", 
+  "traffic2", "emergency_obstacle", "obstacle_avoidance2",
+  "traffic3", "traffic4", "traffic5", "traffic6", "traffic7"]
+mission_types: #parking : 0, obstacle_avoidance: 1, traffic: 2, emergency_obstacle: 3
+  [0, 1, 2, 2, 3, 1, 2, 2, 2, 2, 2]
+mission_activate_ary: [
+  false, #parking
+  true, #obstacle avoidance 1
+  true, #traffic 1
+  true, #traffic 2
+  true, #emergency_obstacle
+  true, #obstacle avoidance 2
+  true, #traffic 3
+  false, #traffic 4
+  false, #traffic 5
+  false, #traffic 6
+  false  #traffic 7
+]
+#above 3 vectors must have same length
+
+
+#mission specific parameters - closely associated only with Mission.h
+parking: 
+  poly: [187.521, -182.309, 219.919, -200.685, 225.402, -190.992, 193.390, -173.576]
+  seeking_velocity: 2.0
+  parking_time: 4.0
+  n_goal : 6
+  driving_velocity: 4.0
+  #(x_pose, y_pose, z_ori, w_ori) * 2 * n_goal_area. consider only xy plane since /move_base_simple/goal handles only 2d
+  goal_pose : [207.685, -185.463, 0.7783, 0.6278, 208.810, -190.496, 0.9952, 0.0977, #goal1, goal_recover1
+               205.095, -184.226, 0.7743, 0.6327, 206.782, -189.191,  0.9959, 0.0894, #goal2, goal_recover2
+              202.662, -182.739, 0.7864, 0.6176, 204.081, -187.544, 0.9969, 0.0777, #goal3, goal_recover3
+              200.197, -181.352, 0.7879, 0.6157, 201.698, -186.351, 0.9970, 0.0761, #goal4
+              197.664, -180.036, 0.7799, 0.6258, 199.290, -184.845, 0.9977, 0.0669, #goal5
+              195.227, -178.629, 0.7774, 0.6288, 196.796, -183.311, 0.9981, 0.0608] #goal6
+  #(x_pose, y_pose) * 4 * n_goal_area
+  goal_area : [208.915,-187.485,206.407,-187.620,206.591,-182.996,208.929,-182.827,
+              206.460,-186.052,206.401,-181.413,204.075,-181.543,203.961,-186.167,
+              204.006,-184.619,203.874,-179.999,201.560,-180.091,201.514,-184.715,
+              201.551,-183.186,199.068,-183.262,199.044,-178.638,201.347,-178.585,
+              199.096,-181.753,196.622,-181.809,196.528,-177.186,198.819,-177.171,
+              196.642,-180.320,196.292,-175.757,194.012,-175.733,194.176,-180.356]
+obstacle_avoidance1: 
+  poly: [155.292, -170.961, 163.043, -176.199, 145.362, -205.029, 138.209, -198.916]
+  avoidance_velocity: 1.5
+  driving_velocity: 4.0
+  avoidance_distance: 4.5
+traffic1: 
+  poly: [110.859, -161.329, 99.794, -182.756, 97.170, -181.034, 108.52, -160.097]
+  stopline_points : [108.511,-159.888,111.214,-161.674] #(x1, y1), (x2, y2). they are points on the stopline
+  type : "STRAIGHT" # only LEFT, STRAIGHT_3, STRAIGHT_4 are allowed
+  n_hole: 4
+  section: 1 #traffic light area identifier. must be aligned with traffic light sender node
+  traffic_velocity: 4.0
+  driving_velocity: 4.0
+  safety_margin: 1.0
+  max_waiting_time: 60.0
+traffic2: 
+  poly: [138.229, -115.231, 134.769, -113.265, 123.834, -131.623, 126.547, -133.710]
+  stopline_points : [138.229, -115.231, 134.769, -113.265]
+  type : "LEFT"
+  n_hole: 4
+  section: 2
+  traffic_velocity: 3.0
+  driving_velocity: 2.0
+  safety_margin: 1.0
+  max_waiting_time: 60.0
+emergency_obstacle: 
+  poly: [106.229, -76.717, 105.655, -80.127, 136.828, -96.359, 138.798, -92.599]
+  driving_velocity : 6.0 
+  dynamic_obj_velocity : 2.0
+obstacle_avoidance2: 
+  poly: [-12.590, -70.621, -13.997, -76.405, 56.585, -107.911, 58.837, -97.760]
+  avoidance_velocity: 5.0
+  driving_velocity: 6.0
+  avoidance_distance: 10.0 
+traffic3: 
+  poly: [-14.1445, -69.7636, -14.0198, -77.0766, -35.69, -74.0104, -35.5849, -67.7915]
+  stopline_points : [-35.558,-74.399,-35.667,-69.320]
+  type : "STRAIGHT"
+  n_hole: 4
+  section: 3
+  traffic_velocity: 6.0
+  driving_velocity: 6.0
+  safety_margin: 4.0
+  max_waiting_time: 60.0
+traffic4: 
+  poly: [-120.75, -66.6538, -120.154, -73.5443, -140.87, -73.4134, -141.037, -67.3378]
+  stopline_points : [-140.856,-74.141,-141.140,-70.840]
+  type : "LEFT"
+  n_hole: 4
+  section: 4
+  traffic_velocity: 2.0
+  driving_velocity: 4.0
+  safety_margin: 3.0
+  max_waiting_time: 60.0
+traffic5: 
+  poly: [-179.775, -99.405, -179.234, -119.62, -173.05, -119.463, -172.739, -99.76]
+  stopline_points : [-172.486,-119.428,-174.736,-119.419]
+  type : "LEFT" 
+  n_hole: 3
+  section: 5
+  traffic_velocity: 4.0
+  driving_velocity: 6.0
+  safety_margin: 1.0
+  max_waiting_time: 60.0
+traffic6: 
+  poly: [59.2844, -113.846, 58.0351, -116.415, 42.5754, -108.337, 44.4076, -105.721]
+  stopline_points : [57.611, -116.440, 58.739, -114.676]
+  type : "STRAIGHT"
+  n_hole: 4
+  section: 6
+  traffic_velocity: 6.0
+  driving_velocity: 4.0
+  safety_margin: 1.0
+  max_waiting_time: 60.0
+traffic7: 
+  poly: [100.568, -134.346, 99.1824, -136.986, 76.045, -124.927, 77.595, -121.711]
+  stopline_points : [100.778,-134.126, 99.665,-135.991]
+  type : "STRAIGHT"
+  n_hole: 4
+  section: 7
+  traffic_velocity: 4.0
+  driving_velocity: 6.0
+  safety_margin: 1.0
+  max_waiting_time: 60.0

@@ -1,0 +1,6 @@
+<launch>
+	<include file="$(find erp42_driver)/launch/erp42_main.launch"/>
+    <include file="$(find mysen_imu_driver)/launch/mysen_imu.launch"/>
+	<node pkg="myodom" type="myodom" name="myodom"/>
+	<node pkg="rviz" type="rviz" name="rviz"/>
+</launch>

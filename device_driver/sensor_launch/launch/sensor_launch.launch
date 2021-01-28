@@ -1,0 +1,48 @@
+<launch>
+
+  <!--<node pkg="mysen_imu_driver" type="driver_node" name="mysen_imu">
+    <param name="port" value="/dev/mysen_imu"/>
+    <param name="mode" value="6"/>
+  </node> -->
+
+  <node name="nmea_serial_driver_node" pkg="nmea_navsat_driver" type="nmea_serial_driver" output="screen">
+    <param name="port" value="/dev/garmin19x"/>
+    <param name="baud" value="38400" />
+    <param name="frame_id" value="gps" />
+    <param name="use_GNSS_time" value="False" />
+    <param name="time_ref_source" value="gps" />
+    <param name="useRMC" value="False" />
+  </node>
+
+  <!-- velodyne 16 -->
+  <arg name="pcap" default="" />
+  <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
+  <arg name="min_range" default="0.4" />
+  <arg name="max_range" default="130.0" />
+  <arg name="model" default="VLP16"/>
+  <arg name="topic_name" default="points_raw"/>
+
+  <!-- start nodelet manager and driver nodelets -->
+  <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
+    <arg name="model" value="$(arg model)"/>
+    <arg name="pcap" value="$(arg pcap)"/>
+  </include>
+
+  <!-- start cloud nodelet -->
+  <node pkg="nodelet" type="nodelet" name="cloud_nodelet"
+        args="load velodyne_pointcloud/CloudNodelet velodyne_nodelet_manager">
+    <param name="calibration" value="$(arg calibration)"/>
+    <param name="min_range" value="$(arg min_range)"/>
+    <param name="max_range" value="$(arg max_range)"/>
+    <remap from="velodyne_points" to="$(arg topic_name)"/>
+  </node>
+
+  <node pkg="erp42_driver" type="erp42_main" name="erp42_main">
+    <param name="port" value="/dev/erp42"/>
+    <param name="frequency" value="20"/>
+    <param name="wheelbase" value="1.12"/>
+    <param name="maximum_steering_angle" value="2000"/>
+    <param name="minimum_turning_radius" value="2.6"/>
+    <param name="initWriteThread" value="true"/>
+  </node>
+</launch>

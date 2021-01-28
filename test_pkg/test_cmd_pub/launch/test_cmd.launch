@@ -1,0 +1,14 @@
+
+<launch>
+	<node pkg="test_cmd_pub" type="test_cmd_pub" name="test_cmd_pub" output="screen">
+		<param name="linear_v" value="1"/>
+		<param name="angular_w" value="0.0"/>
+		<param name="T" value="8"/>
+		<param name="PLUS" value="2"/>
+		<param name="variable_velocity" value="false"/>
+		<param name="floor_T" value="100"/>
+		<param name="target_vel_1" value="1"/>
+		<param name="target_vel_2" value="3"/>
+
+	</node>
+</launch>

@@ -1,0 +1,28 @@
+<launch>
+	<rosparam command="load" file="$(find mission_handler_2020)/cfg/mission_params_parkinglot_parking.yaml"/>
+	<node name="mission_manager" pkg="mission_handler_2020" type="mission_manager" output="screen"/>
+
+  <!-- Arguments -->
+  <arg name="model" default="waffle_pi" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="odom_topic" default="ekf_twist" />
+  <arg name="move_forward_only" default="false"/>
+  <arg name="goal_topic" default="/no_use_but_need_to_set_this_param"/>
+
+  <!-- Run the map server -->
+  <arg name="map_file" default="$(find erp42_parking_manager)/maps/hello/parkinglot_parking.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+  <!-- move_base -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find erp42_parking_manager)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find erp42_parking_manager)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find erp42_parking_manager)/param/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find erp42_parking_manager)/param/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find erp42_parking_manager)/param/move_base_params.yaml" command="load" />
+    <rosparam file="$(find erp42_parking_manager)/param/teb_local_planner_params.yaml" command="load" />
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+  </node>
+  <param name="erp42_parking_goal_topic" value="$(arg goal_topic)"/>
+
+  
+</launch>

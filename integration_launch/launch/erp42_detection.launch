@@ -1,0 +1,50 @@
+<launch>
+  <arg name="points_raw_topic" default="/points_raw"/>
+  <arg name="road_points_topic" default="/local_road_points"/>
+
+  <arg name="height_from_ground_to_lidar" default="0.75"/>
+  <arg name="x_limit_forward" default="50.0" />
+  <arg name="x_limit_back" default="-25.0" />
+  <arg name="y_limit" default="20.0" />
+  <arg name="z_high_limit" default="0.5" />
+  <arg name="erase_road_threshold" default="0.3" />
+  <arg name="box_threshold" default="0.03" />
+
+  <arg name="my_car_width" default="1.5" />
+  <arg name="my_car_height" default="3.0" />
+  <arg name="max_cluster_size" default="100" />
+  
+  <node name="quadtree_segmentation" pkg="lidar_quadtree_cluster" type="quadtree_segmentation" output="screen" >
+
+    <param name="points_raw_topic" value="$(arg points_raw_topic)" />
+    <param name="road_points_topic" value="$(arg road_points_topic)" />
+    <param name="height_from_ground_to_lidar" value="$(arg height_from_ground_to_lidar)" />
+    <param name="x_limit_forward" value="$(arg x_limit_forward)" />
+    <param name="x_limit_back" value="$(arg x_limit_back)" />
+    <param name="y_limit" value="$(arg y_limit)" />
+    <param name="z_high_limit" value="$(arg z_high_limit)" />
+    <param name="erase_road_threshold" value="$(arg erase_road_threshold)" />
+    <param name="box_threshold" value="$(arg box_threshold)"/>
+
+    <param name="my_car_width" value="$(arg my_car_width)"/>
+    <param name="my_car_height" value="$(arg my_car_height)"/>
+    <param name="max_cluster_size" value="$(arg max_cluster_size)"/>
+  </node>
+
+
+    <arg name="publish_topic_name" default="/local_road_points" />
+    <arg name="points_map_subscribe_name" default="/points_map" />
+    <arg name="localizer_pose_subscribe_name" default="/localizer_pose" />
+    <arg name="road_width" default="5" />
+    <arg name="find_road_radius" default="50.0" />
+
+    <node name="road_extractor" pkg="lidar_quadtree_cluster" type="road_extractor" output="screen" >
+        <param name="publish_topic_name" value="$(arg publish_topic_name)"/>
+        <param name="points_map_subscribe_name" value="$(arg points_map_subscribe_name)"/>
+        <param name="localizer_pose_subscribe_name" value="$(arg localizer_pose_subscribe_name)"/>
+        <param name="road_width" value="$(arg road_width)"/>
+        <param name="find_road_radius" value="$(arg find_road_radius)"/>
+    </node>
+
+
+</launch>

@@ -1,0 +1,70 @@
+ #x, y, x, y, ...
+not_use_mission_handler: false
+
+poly:
+  parking: [219.471, -187.871, 213.615, -196.922, 188.509, -180.908, 194.629, -174.501]
+  traffic1: [110.859, -161.329, 99.794, -182.756, 97.170, -181.034, 108.52, -160.097]
+  traffic2: [115.260,-135.980, 115.394, -139.598, 88.1504, -125.617, 89.943, -122.762]
+  obstacle_avoidance: [-12.590, -70.621, -13.997, -76.405, 56.585, -107.911, 58.837, -97.760]
+  traffic3: [-14.1445, -69.7636, -14.0198, -77.0766, -35.69, -74.0104, -35.5849, -67.7915]
+  traffic4: [-112.75, -66.6538, -112.154, -73.5443, -140.87, -73.4134, -141.037, -67.3378]
+  traffic5: [-179.775, -99.405, -179.234, -119.62, -173.05, -119.463, -172.739, -99.76]
+  traffic6: [59.2844, -113.846, 58.0351, -116.415, 42.5754, -108.337, 44.4076, -105.721]
+  traffic7: [100.568, -134.346, 99.1824, -136.986, 76.045, -124.927, 77.595, -121.711]
+traffic_light: 
+  critical_distance: 8.5 #6.06 for braking distance + 1.4 for vehicle tip + 1 for safety
+  stopline_points1 : [108.511,-159.888,111.214,-161.674] #(x1, y1), (x2, y2). they are points on the stopline
+  type1 : "LEFT" # only LEFT, STRAIGHT_3, STRAIGHT_4 are allowed
+  n_hole1: 4
+  stopline_points2 : [88.344,-125.985,90.787,-121.503]
+  type2 : "STRAIGHT"
+  n_hole2: 4
+  stopline_points3 : [-35.558,-74.399,-35.667,-69.320]
+  type3 : "STRAIGHT"
+  n_hole3: 4
+  stopline_points4 : [-140.856,-74.141,-141.140,-70.840]
+  type4 : "LEFT"
+  n_hole4: 4
+  stopline_points5 : [-172.486,-119.428,-174.736,-119.419]
+  type5 : "STRAIGHT" #exception for 3 hole traffic light
+  n_hole5: 3
+  stopline_points6 : [57.611, -116.440, 58.739, -114.676]
+  type6 : "STRAIGHT"
+  n_hole6: 4
+  stopline_points7 : [100.778,-134.126, 99.665,-135.991]
+  type7 : "STRAIGHT"
+  n_hole7: 4
+mission_activate_ary: [
+  1, #none
+  1, #parking
+  1, #traffic 1
+  1, #traffic 2
+  1, #obstacle avoidance
+  1, #traffic 3
+  1, #traffic 4
+  1, #traffic 5
+  1, #traffic 6
+  1  #traffic 7
+]
+parking: #goal pose, recovery pose
+  seeking_velocity: 1.0
+  parking_time: 4.0
+  n_goal : 6
+  driving_velocity: 6.0
+  #(x_pose, y_pose, z_ori, w_ori) * 2 * n_goal_area. consider only xy plane since /move_base_simple/goal handles only 2d
+  goal_pose : [207.686, -184.988, 0.7092, 0.7049, 210.771, -191.999, 0.9691, 0.2465, #goal1, goal_recover1
+              205.128, -183.552, 0.7137, 0.7003, 207.961, -190.589,  0.9638, 0.2665, #goal2, goal_recover2
+              202.672, -181.984, 0.7135, 0.7005, 205.911, -189.271, 0.9638, 0.2663, #goal3, goal_recover3
+              200.160, -180.610, 0.7023, 0.7118, 203.461, -187.937, 0.9681, 0.2505, #goal4
+              197.602, -179.331, 0.7203, 0.6936, 200.960, -186.464, 0.9685, 0.2487, #goal5
+              195.221, -177.705, 0.7070, 0.7071, 198.407, -185.152, 0.9649, 0.2625] #goal6
+  #(x_pose, y_pose) * 4 * n_goal_area
+  goal_area : [208.915,-187.485,206.407,-187.620,206.591,-182.996,208.929,-182.827,
+              206.460,-186.052,206.401,-181.413,204.075,-181.543,203.961,-186.167,
+              204.006,-184.619,203.874,-179.999,201.560,-180.091,201.514,-184.715,
+              201.551,-183.186,199.068,-183.262,199.044,-178.638,201.347,-178.585,
+              199.096,-181.753,196.622,-181.809,196.528,-177.186,198.819,-177.171,
+              196.642,-180.320,196.292,-175.757,194.012,-175.733,194.176,-180.356]
+obstacle_avoidance:
+  avoidance_velocity: 4.0
+  driving_velocity: 6.0

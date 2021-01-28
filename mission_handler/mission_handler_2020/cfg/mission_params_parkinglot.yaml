@@ -1,0 +1,16 @@
+
+not_use_mission_handler: false
+
+mission_names: ["e_obj"]
+mission_types: #parking : 0, obstacle_avoidance: 1, traffic: 2, emergency_obstacle: 3
+  [1]
+mission_activate_ary: [
+  true
+]
+#above 3 vectors must have same length
+
+e_obj: 
+  poly: [86.742,20.283, 93.351,20.789, 91.251, 48.981, 85.083, 47.919]
+  avoidance_velocity: 1.5
+  driving_velocity: 6.0
+  avoidance_distance: 4.5
